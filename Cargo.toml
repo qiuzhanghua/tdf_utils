@@ -1,0 +1,11 @@
+[package]
+name = "tdf_utils"
+version = "0.1.0"
+authors = ["qiuzhanghua <qiuzhanghua@icloud.com>"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0"
+serde_json = "1.0"
+json = "0.12"
