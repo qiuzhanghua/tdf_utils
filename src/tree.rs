@@ -46,7 +46,7 @@ where
 {
     #[serde(flatten)]
     node: Item,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     children: Vec<TreeNode<K, Item>>,
     #[serde(skip)]
     phantom: PhantomData<K>,
