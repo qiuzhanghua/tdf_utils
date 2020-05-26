@@ -1,4 +1,4 @@
-use serde::ser::SerializeStruct;
+use serde::Deserialize;
 use serde::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::marker::PhantomData;
@@ -38,33 +38,18 @@ where
 }
 
 /// Actual TreeNode
-#[derive(Debug, Default, Clone, PartialOrd, Eq)]
+#[derive(Debug, Default, Clone, PartialOrd, Eq, Serialize, Deserialize)]
 pub struct TreeNode<K, Item>
 where
     K: Eq,
     Item: TreeNodeLike<K> + Ord,
 {
+    #[serde(flatten)]
     node: Item,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     children: Vec<TreeNode<K, Item>>,
+    #[serde(skip)]
     phantom: PhantomData<K>,
-}
-
-impl<K, Item> Serialize for TreeNode<K, Item>
-where
-    K: Eq + Serialize,
-    Item: TreeNodeLike<K> + Ord + Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Node", 2)?;
-        state.serialize_field("node", &self.node)?;
-        if !&self.children.is_empty() {
-            state.serialize_field("children", &self.children)?;
-        }
-        state.end()
-    }
 }
 
 /// TreeNode methods
@@ -178,6 +163,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::tree::{insert, Tree, TreeNode, TreeNodeLike};
+    use serde::ser::SerializeStruct;
+    use serde::{Serialize, Serializer};
     use std::cmp::Ordering;
 
     #[test]
@@ -260,6 +247,7 @@ mod tests {
     struct Node {
         key: String,
         order: i32,
+        #[serde(skip_serializing)]
         parent: String,
     }
 
@@ -271,10 +259,6 @@ mod tests {
         fn parent(&self) -> String {
             self.parent.clone()
         }
-
-        // fn order(&self) -> i32 {
-        //     self.order
-        // }
     }
 
     impl PartialEq for Node {
