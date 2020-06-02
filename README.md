@@ -7,3 +7,6 @@
 
 通用的树，可以用来表现组织架构图等，相邻的组织架构可以强制排序。
 
+## List
+1. single list
+2. for study only
