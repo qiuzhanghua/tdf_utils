@@ -163,8 +163,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::tree::{insert, Tree, TreeNode, TreeNodeLike};
-    use serde::ser::SerializeStruct;
-    use serde::{Serialize, Serializer};
+    use serde::Serialize;
     use std::cmp::Ordering;
 
     #[test]
@@ -240,7 +239,6 @@ mod tests {
 
         let json = serde_json::to_string(&tree).unwrap();
         println!("{}", json);
-        assert_eq!(4, 2); //to  show converted json, make test failed
     }
 
     #[derive(Debug, PartialOrd, Eq, Serialize)]

@@ -28,7 +28,11 @@ impl<T> List<T> {
         }
     }
 
-    pub fn len(&mut self) -> usize {
+    pub fn is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+
+    pub fn len(&self) -> usize {
         let mut ans = 0;
         let mut p = self;
         while let Some((_, next)) = &p.0 {
@@ -54,11 +58,9 @@ mod tests {
         let mut list = List::default();
         assert_eq!(list.len(), 0);
         list.push_front(3);
-        list.push_back(3);
+        list.push_back(4);
         list.push_front(9);
-        println!("{:?}", list);
         assert_eq!(list.len(), 3);
-        //        panic!()
     }
 
     #[test]
