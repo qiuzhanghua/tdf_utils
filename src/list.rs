@@ -11,6 +11,16 @@ impl<T> List<T> {
         self.0 = Some((data, Box::new(List(t))))
     }
 
+    pub fn pop_front(&mut self) -> Option<T> {
+        match self.0.take() {
+            None => None,
+            Some((val, next)) => {
+                self.0 = next.0;
+                Some(val)
+            }
+        }
+    }
+
     pub fn push_back(&mut self, data: T) {
         match self.0 {
             Some((_, ref mut next)) => next.push_back(data),
@@ -49,5 +59,32 @@ mod tests {
         println!("{:?}", list);
         assert_eq!(list.len(), 3);
         //        panic!()
+    }
+
+    #[test]
+    pub fn list_test_02() {
+        let mut list: List<i32> = List::default();
+        let p = list.pop_front();
+        assert_eq!(p.is_none(), true);
+        assert_eq!(list.len(), 0);
+        list.push_front(3);
+        list.push_back(4);
+        list.push_front(9);
+        println!("{:?}", list);
+        let p = list.pop_front();
+        println!("{:?}", p);
+        assert_eq!(p, Some(9));
+        println!("{:?}", list);
+        let p = list.pop_front();
+        println!("{:?}", p);
+        println!("{:?}", list);
+        assert_eq!(p, Some(3));
+        let p = list.pop_front();
+        println!("{:?}", p);
+        println!("{:?}", list);
+        assert_eq!(p, Some(4));
+        let p = list.pop_front();
+        println!("{:?}", p);
+        assert_eq!(p, None);
     }
 }
