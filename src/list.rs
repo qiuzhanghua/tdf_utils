@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 #[derive(Debug, Default)]
 pub struct List<T>(Option<(T, Box<List<T>>)>);
 
@@ -49,9 +52,93 @@ impl<T> List<T> {
     }
 }
 
+#[derive(Clone, Default)]
+pub struct ListNode<T> {
+    val: T,
+    next: ListLink<T>,
+    prev: ListLink<T>,
+}
+
+pub type ListLink<T> = Option<Rc<RefCell<ListNode<T>>>>;
+
+#[derive(Clone, Default)]
+pub struct DoubleLinkedList<T: Clone> {
+    head: ListLink<T>,
+    tail: ListLink<T>,
+    pub length: u64,
+}
+
+impl<T: Clone> DoubleLinkedList<T> {
+    pub fn append(&mut self, val: T) {
+        let n = Rc::new(RefCell::new(ListNode {
+            val,
+            next: None,
+            prev: None,
+        }));
+        match self.tail.take() {
+            Some(old) => {
+                old.borrow_mut().next = Some(n.clone());
+                n.borrow_mut().prev = Some(old);
+            }
+            None => self.head = Some(n.clone()),
+        }
+        self.length += 1;
+        self.tail = Some(n)
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        self.head.take().map(|head| {
+            if let Some(next) = head.borrow_mut().next.take() {
+                next.borrow_mut().prev = None;
+                self.head = Some(next);
+            } else {
+                self.tail.take();
+            }
+            self.length -= 1;
+            Rc::try_unwrap(head)
+                .ok()
+                .unwrap() // .expect("fatal error")
+                .into_inner()
+                .val
+        })
+    }
+
+    pub fn iter(&self) -> DoubleLinkedListIterator<T> {
+        DoubleLinkedListIterator::new(self.head.clone())
+    }
+}
+
+pub struct DoubleLinkedListIterator<T: Clone> {
+    current: ListLink<T>,
+}
+
+impl<T: Clone> DoubleLinkedListIterator<T> {
+    fn new(start_at: ListLink<T>) -> Self {
+        DoubleLinkedListIterator { current: start_at }
+    }
+}
+
+impl<T: Clone> Iterator for DoubleLinkedListIterator<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let current = &self.current;
+        let mut result = None;
+        self.current = match current {
+            Some(ref current) => {
+                let current = current.borrow();
+                result = Some(current.val.clone());
+                current.next.clone()
+            }
+            None => None,
+        };
+        result
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::list::List;
+    use crate::list::{DoubleLinkedList, List};
 
     #[test]
     pub fn list_test_01() {
@@ -88,5 +175,39 @@ mod tests {
         let p = list.pop_front();
         println!("{:?}", p);
         assert_eq!(p, None);
+    }
+
+    #[test]
+    pub fn list_test_03() {
+        let mut dl = DoubleLinkedList::<i32>::default();
+        dl.append(1);
+        dl.append(2);
+        dl.append(3);
+        println!("{:?}", dl.length);
+        //println!("{:?}", dl);
+        let o = dl.pop();
+        println!("{:?}", o);
+        let o = dl.pop();
+        println!("{:?}", o);
+        let o = dl.pop();
+        println!("{:?}", o);
+        let o = dl.pop();
+        println!("{:?}", o);
+        assert!(o.is_none())
+    }
+
+    #[test]
+    pub fn list_test_04() {
+        let mut dl = DoubleLinkedList::<i32>::default();
+        dl.append(1);
+        dl.append(2);
+        dl.append(3);
+        println!("{:?}", dl.length);
+
+        for o in dl.iter() {
+            println!("{}", o)
+        }
+
+        assert_eq!(dl.length, 3)
     }
 }

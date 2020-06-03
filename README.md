@@ -10,3 +10,6 @@
 ## List
 1. single list
 2. for study only
+
+## Double Linked List
+Don't debug list, otherwise stack is overflow
