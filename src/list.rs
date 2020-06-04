@@ -69,7 +69,44 @@ pub struct DoubleLinkedList<T: Clone> {
 }
 
 impl<T: Clone> DoubleLinkedList<T> {
-    pub fn append(&mut self, val: T) {
+    /// Insert element @ head
+    pub fn insert(&mut self, val: T) {
+        let n = Rc::new(RefCell::new(ListNode {
+            val,
+            next: None,
+            prev: None,
+        }));
+        match self.head.take() {
+            Some(old) => {
+                old.borrow_mut().prev = Some(n.clone());
+                n.borrow_mut().next = Some(old);
+            }
+            None => self.tail = Some(n.clone()),
+        }
+        self.length += 1;
+        self.head = Some(n)
+    }
+
+    /// remove element @ head
+    pub fn remove(&mut self) -> Option<T> {
+        self.head.take().map(|head| {
+            if let Some(next) = head.borrow_mut().next.take() {
+                next.borrow_mut().prev = None;
+                self.head = Some(next);
+            } else {
+                self.tail.take();
+            }
+            self.length -= 1;
+            Rc::try_unwrap(head)
+                .ok()
+                .unwrap() // .expect("fatal error")
+                .into_inner()
+                .val
+        })
+    }
+
+    /// add element @ tail
+    pub fn push(&mut self, val: T) {
         let n = Rc::new(RefCell::new(ListNode {
             val,
             next: None,
@@ -86,16 +123,17 @@ impl<T: Clone> DoubleLinkedList<T> {
         self.tail = Some(n)
     }
 
+    /// remove element @ tail
     pub fn pop(&mut self) -> Option<T> {
-        self.head.take().map(|head| {
-            if let Some(next) = head.borrow_mut().next.take() {
-                next.borrow_mut().prev = None;
-                self.head = Some(next);
+        self.tail.take().map(|tail| {
+            if let Some(prev) = tail.borrow_mut().prev.take() {
+                prev.borrow_mut().next = None;
+                self.tail = Some(prev);
             } else {
-                self.tail.take();
+                self.head.take();
             }
             self.length -= 1;
-            Rc::try_unwrap(head)
+            Rc::try_unwrap(tail)
                 .ok()
                 .unwrap() // .expect("fatal error")
                 .into_inner()
@@ -180,9 +218,9 @@ mod tests {
     #[test]
     pub fn list_test_03() {
         let mut dl = DoubleLinkedList::<i32>::default();
-        dl.append(1);
-        dl.append(2);
-        dl.append(3);
+        dl.push(1);
+        dl.push(2);
+        dl.push(3);
         println!("{:?}", dl.length);
         //println!("{:?}", dl);
         let o = dl.pop();
@@ -199,9 +237,9 @@ mod tests {
     #[test]
     pub fn list_test_04() {
         let mut dl = DoubleLinkedList::<i32>::default();
-        dl.append(1);
-        dl.append(2);
-        dl.append(3);
+        dl.push(1);
+        dl.push(2);
+        dl.push(3);
         println!("{:?}", dl.length);
 
         for o in dl.iter() {
@@ -209,5 +247,23 @@ mod tests {
         }
 
         assert_eq!(dl.length, 3)
+    }
+
+    #[test]
+    pub fn list_test_05() {
+        let mut dl = DoubleLinkedList::<i32>::default();
+        dl.insert(1);
+        dl.insert(2);
+        dl.insert(3);
+        dl.push(100);
+        let o = dl.remove();
+        println!("{:?}", o);
+        let o = dl.pop();
+        println!("{:?}", o);
+
+        for o in dl.iter() {
+            println!("{}", o)
+        }
+        assert_eq!(dl.length, 2)
     }
 }
